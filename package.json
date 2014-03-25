@@ -1,7 +1,7 @@
 {
-  "name": "collbit",
+  "name": "Bjartur",
   "version": "0.0.0",
-  "description": "Risk distribution bitcoin-based app",
+  "description": "A simple SPDY-based HTTP server.",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -10,10 +10,12 @@
   "license": "ISC",
   "dependencies": {
     "spdy": "*",
-    "iced-coffee-script": "*"
+    "iced-coffee-script": "*",
+    "mime": "*"
   },
   "devDependencies": {
     "gulp": "~3.5.6",
     "gulp-iced": "0.0.2"
-  }
+  },
+  "coffeelintConfig": "~/.coffeelint.json"
 }
