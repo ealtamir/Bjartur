@@ -9,6 +9,4 @@ exports.eventAggregator = do () ->
 
   util.inherits EventAggregator, events.EventEmitter
 
-  new EventAggregator()
-
-
+  eventAggr = new EventAggregator()

@@ -1,13 +1,13 @@
-url   = require "url"
-spdy  = require "spdy"
 fs    = require "fs"
 http  = require "http"
-mime = require "mime"
+spdy  = require "spdy"
+url   = require "url"
 
-config        =  require("./lib/config").config
 cache         =  require("./cache").cache
-fetchContent  =  require("./static_content_provider").fetchContent
+config        =  require("./lib/config").config
 eventAggr     =  require("./event_aggregator").eventAggregator
+fetchContent  =  require("./static_content_provider").fetchContent
+send404       =  require("./static_content_provider").send404
 
 exports.initServer = (cache) ->
   startSPDY()
@@ -44,23 +44,19 @@ startHTTP = () ->
 
 serveStaticFile = (req, res, file, cache) ->
   headers = req.headers
-  etag = cache.get(file).stats.atime
 
-  fetchContent file, headers, cache, (data) ->
-    respHeaders =
-      "Date"             : new Date().toString()
-      "Cache-Control"    : "max-age=1000000"
-      "Content-Type"     : mime.lookup file
-      "Etag"             : +etag
-      "Content-Encoding" : headers["Content-Encoding"] or ''
+  fetchContent file, headers, "common", cache,
+    (data, respHeaders, code) ->
+      if code is 404
+        return send404 req, res, cache
 
-    if data is null
-      respHeaders["Content-Length"] = 0
-    else
-      respHeaders["Content-Length"] = +data.length
+      #else if data is null
+      #  respHeaders["Content-Length"] = 0
+      #else
+      #  respHeaders["Content-Length"] = +data.length
 
-    res.writeHead 200, respHeaders
-    res.end data
+      res.writeHead code, respHeaders
+      res.end data
 
 requestHandler = (cache) ->
   (req, res) ->
@@ -68,8 +64,7 @@ requestHandler = (cache) ->
     subStr = parsedUrl.pathname[1..config.static_dir.length]
 
     # "/#{subStr}" is "/static"
-    if subStr is config.static_dir and cache.get(parsedUrl.pathname)?
+    if subStr is config.static_dir
       serveStaticFile req, res, parsedUrl.pathname, cache
     else
-      res.end "Hello World!"
-      eventAggr.emit "HANDLE_HTTP_REQUEST", req, res, parsedUrl
+      eventAggr.emit "HTTP_REQUEST_RECEIVED", req, res, parsedUrl.path
